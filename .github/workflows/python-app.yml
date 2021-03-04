@@ -26,24 +26,31 @@ jobs:
       run: |
         python -m pip install --upgrade pip pipenv
 
-    - name: Check Python version
-      run: |
-        which python
-        python --version
-        which python3
-        python3 --version
-        which python3.9
-        python3.9 --version
-        which pipenv
-        pipenv --version
-
-    - name: Update version
-      run: fsbuild/version --update --auto
-
     - name: Run pipenv install
       run: |
         pipenv install --deploy
-        
+
+    - name: Download pyinstaller source
+      run: |
+        wget https://github.com/pyinstaller/pyinstaller/releases/download/v4.2/PyInstaller-4.2.tar.gz
+        echo "f5c0eeb2aa663cce9a5404292c0195011fa500a6501c873a466b2e8cad3c950c *PyInstaller-4.2.tar.gz" > SHA256SUMS
+        shasum -c SHA256SUMS
+        tar xf PyInstaller-4.2.tar.gz
+
+    - name: Compile new bootloader for pyinstaller
+      run: |
+        cd pyinstaller-4.2/bootloader
+        CC="gcc -no-pie" ./waf all
+
+    - name: Replace pyinstaller with custom version
+      run: |
+        pipenv uninstall pyinstaller
+        pipenv install `pwd`/pyinstaller-4.2
+
+    - name: Update version
+      run: |
+        fsbuild/version --update --auto
+
     - name: Build
       run: |
         pipenv run fsbuild/build
@@ -53,20 +60,19 @@ jobs:
         pipenv run fsbuild/bundle
 
     - name: Archive
-      run: fsbuild/archive
+      run: |
+        fsbuild/archive
 
     - uses: actions/upload-artifact@v2
       with:
         name: Linux_x86-64
         path: fsbuild/_dist/*
 
-    - name: Install dropbox package
-      if: github.ref == 'refs/heads/fs-fuse-launcher/master'
-      run: python3 -m pip install dropbox
-
     - name: Upload build to Dropbox folder
-      if: github.ref == 'refs/heads/fs-fuse-launcher/master'
-      run: fsbuild/upload
+      if: github.ref == 'refs/heads/master'
+      run: |
+        python3 -m pip install dropbox
+        fsbuild/upload
       env:
         DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         DROPBOX_ACCESS_TOKEN: ${{ secrets.DROPBOX_ACCESS_TOKEN }}
@@ -101,35 +107,17 @@ jobs:
       run: |
         echo /Library/Frameworks/Python.framework/Versions/3.9/bin >> $GITHUB_PATH  
 
-    - name: Download pyinstaller source
-      run: |
-        wget https://github.com/pyinstaller/pyinstaller/releases/download/v4.2/PyInstaller-4.2.tar.gz
-        echo "f5c0eeb2aa663cce9a5404292c0195011fa500a6501c873a466b2e8cad3c950c *PyInstaller-4.2.tar.gz" > SHA256SUMS
-        shasum -c SHA256SUMS
-        tar xf PyInstaller-4.2.tar.gz
-
-    - name: Patch pyinstaller and compile bootloader
-      run: |
-        cd pyinstaller-4.2/bootloader
-        sed -i.bak s#%s%cbase_library.zip#%s%c../Resources/base_library.zip#g src/pyi_pythonlib.c
-        ./waf all
-
-    - name: Install pipenv
+    - name: Install dependencies
       run: |
         python3 -m pip install --upgrade pip pipenv
-
-    - name: Update version
-      run: |
-        fsbuild/version --update --auto
 
     - name: Run pipenv install
       run: |
         pipenv install --deploy
 
-    - name: Install custom version of pyinstaller
+    - name: Update version
       run: |
-        pipenv uninstall pyinstaller
-        pipenv install `pwd`/pyinstaller-4.2
+        fsbuild/version --update --auto
 
     - name: Build
       run: |
@@ -147,20 +135,18 @@ jobs:
         name: macos_x86-64
         path: fsbuild/_dist/*
 
-    - name: Install dropbox package
-      if: github.ref == 'refs/heads/fs-fuse-launcher/master'
-      run: python3 -m pip install dropbox
-
     - name: Upload build to Dropbox folder
-      if: github.ref == 'refs/heads/fs-fuse-launcher/master'
-      run: fsbuild/upload
+      if: github.ref == 'refs/heads/master'
+      run: |
+        python3 -m pip install dropbox
+        fsbuild/upload
       env:
         DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         DROPBOX_ACCESS_TOKEN: ${{ secrets.DROPBOX_ACCESS_TOKEN }}
 
   Windows_x86-64:
     runs-on: windows-2016
-      
+
     defaults:
       run:
         shell: msys2 {0}
@@ -190,21 +176,14 @@ jobs:
       run: |
         START /WAIT python-3.9.2-amd64.exe /install /quiet PrependPath=1
 
-    - name: Create python3 alias
+    - name: Add Python to PATH
       run: |
         export PYTHONDIR=$LOCALAPPDATA/Programs/Python/Python39
         cp $PYTHONDIR/python.exe $PYTHONDIR/python3.exe
+        echo $PYTHONDIR/Scripts >> $GITHUB_PATH
+        echo $PYTHONDIR >> $GITHUB_PATH
 
-    - name: Add Python to PATH
-      run: |
-        echo $LOCALAPPDATA/Programs/Python/Python39/Scripts >> $GITHUB_PATH  
-        echo $LOCALAPPDATA/Programs/Python/Python39 >> $GITHUB_PATH
-
-    - name: Update version
-      run: |
-        fsbuild/version --update --auto
-
-    - name: Install pipenv
+    - name: Install dependencies
       run: |
         python3 -m pip install --upgrade pip pipenv
 
@@ -215,6 +194,10 @@ jobs:
     - name: Create python3 alias in virtualenv
       run: |
         pipenv run bash -c 'cp $VIRTUAL_ENV/Scripts/python.exe $VIRTUAL_ENV/Scripts/python3.exe'
+
+    - name: Update version
+      run: |
+        fsbuild/version --update --auto
 
     - name: Build
       run: |
@@ -232,13 +215,11 @@ jobs:
         name: Windows_x86-64
         path: fsbuild/_dist/*
 
-    - name: Install dropbox package
-      if: github.ref == 'refs/heads/fs-fuse-launcher/master'
-      run: python3 -m pip install dropbox
-
     - name: Upload build to Dropbox folder
-      if: github.ref == 'refs/heads/fs-fuse-launcher/master'
-      run: fsbuild/upload
+      if: github.ref == 'refs/heads/master'
+      run: |
+        python3 -m pip install dropbox
+        fsbuild/upload
       env:
         DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         DROPBOX_ACCESS_TOKEN: ${{ secrets.DROPBOX_ACCESS_TOKEN }}

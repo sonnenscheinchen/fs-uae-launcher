@@ -10,16 +10,19 @@ pylint = "*"
 pytest = "*"
 pytest-mypy = "*"
 rope = "*"
+mypy = "*"
 
 [packages]
 lhafile = "*"
 PyOpenGL = "*"
 PyQt5 = "*"
 pillow = "*"
-pyinstaller = "*"
 requests = "*"
 sentry-sdk = "*"
 pywin32-ctypes = "*"
+pyinstaller = "*"
+pefile = "*"
+macholib = "*"
 
 [requires]
 python_version = "3.9"

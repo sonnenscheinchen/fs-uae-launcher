@@ -2,9 +2,9 @@ name: Python application
 
 on:
   push:
-    branches: [ fs-fuse-launcher/master ]
+    branches: [ openretro-launcher/master ]
   pull_request:
-    branches: [ fs-fuse-launcher/master ]
+    branches: [ openretro-launcher/master ]
 
 jobs:
 

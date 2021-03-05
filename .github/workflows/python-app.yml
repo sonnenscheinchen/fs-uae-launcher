@@ -74,7 +74,7 @@ jobs:
         path: fsbuild/_dist/*
 
     - name: Upload build to Dropbox folder
-      if: github.ref == 'refs/heads/master'
+      if: github.ref == 'refs/heads/openretro-launcher/master'
       run: |
         python3 -m pip install dropbox
         fsbuild/upload
@@ -145,7 +145,7 @@ jobs:
         path: fsbuild/_dist/*
 
     - name: Upload build to Dropbox folder
-      if: github.ref == 'refs/heads/master'
+      if: github.ref == 'refs/heads/openretro-launcher/master'
       run: |
         python3 -m pip install dropbox
         fsbuild/upload
@@ -226,7 +226,7 @@ jobs:
         path: fsbuild/_dist/*
 
     - name: Upload build to Dropbox folder
-      if: github.ref == 'refs/heads/master'
+      if: github.ref == 'refs/heads/openretro-launcher/master'
       run: |
         python3 -m pip install dropbox
         fsbuild/upload

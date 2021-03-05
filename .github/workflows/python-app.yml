@@ -13,6 +13,11 @@ jobs:
 
     steps:
 
+    - name: Install deb packages
+      run: >-
+        sudo apt install
+        dos2unix
+
     - uses: actions/checkout@v2
       with:
         fetch-depth: 0
@@ -81,6 +86,10 @@ jobs:
     runs-on: macos-10.15
 
     steps:
+
+    - name: Install brew packages
+      run: |
+        brew install dos2unix
 
     - uses: actions/checkout@v2
       with:
@@ -161,6 +170,7 @@ jobs:
       with:
         install: >-
           make
+          dos2unix
           zip
         path-type: inherit
         update: true
